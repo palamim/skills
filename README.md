@@ -1,1 +1,24 @@
 # skills
+
+Claude Code skills I use myself, shared as-is. Each skill lives in its own
+directory with a `SKILL.md` (the instructions Claude follows) and, where
+needed, a `scripts/` folder with the code it runs.
+
+## Install
+
+Copy a skill's directory into your `~/.claude/skills/` folder:
+
+```bash
+cp -r new-project ~/.claude/skills/
+```
+
+Claude Code picks up skills from that folder automatically.
+
+## Skills
+
+### new-project
+
+Scaffolds a brand-new project from an empty folder: `git init`, a GitHub repo
+named after the folder, first push, then a minimal working slice and a rough
+`0.1.0`. See [`new-project/SKILL.md`](new-project/SKILL.md) for what it does
+and what it assumes before you run it.
