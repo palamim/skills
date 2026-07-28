@@ -14,6 +14,16 @@ cp -r new-project ~/.claude/skills/
 
 Claude Code picks up skills from that folder automatically.
 
+If you cloned this repo to hack on skills or keep them in sync with edits here,
+symlink them in instead:
+
+```bash
+scripts/link-skills.sh
+```
+
+This links every skill in the repo into `~/.claude/skills/<name>`, skipping any
+name that already exists there as a real (non-symlink) directory.
+
 ## Skills
 
 ### new-project
