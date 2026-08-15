@@ -85,6 +85,15 @@ to sync the lockfile, stages everything uncommitted, commits, and pushes
 straight to `main`. See
 [`bump-push-main/SKILL.md`](bump-push-main/SKILL.md).
 
+### dev-preview
+
+For any npm/pnpm/yarn project: starts its dev server detached in the
+background on the first free port and reports back the `localhost` URL —
+handy when several agents are each working in their own git worktree of the
+same repo and you want to preview each one without juggling terminal windows
+or port collisions. Also supports `status`, `stop`, and `restart`. See
+[`dev-preview/SKILL.md`](dev-preview/SKILL.md).
+
 ## License
 
 [MIT](LICENSE)
