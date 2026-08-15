@@ -94,6 +94,16 @@ same repo and you want to preview each one without juggling terminal windows
 or port collisions. Also supports `status`, `stop`, and `restart`. See
 [`dev-preview/SKILL.md`](dev-preview/SKILL.md).
 
+### check-and-ship
+
+Ships the current branch straight into `main`: decides whether a version
+bump is warranted (patch/minor only, reasoned from the branch's changes,
+never asks which number — and remembers per-repo if you say it doesn't
+manage versions), rebases onto `main` if it's moved since branching, then
+fast-forward-pushes directly to `origin`. Built for the case where several
+agents are each shipping their own branch or worktree into a shared `main`
+independently. See [`check-and-ship/SKILL.md`](check-and-ship/SKILL.md).
+
 ## License
 
 [MIT](LICENSE)
