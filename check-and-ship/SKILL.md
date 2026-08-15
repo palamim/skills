@@ -19,11 +19,14 @@ this only ships committed history, it does not sweep up stragglers the way
 `bump-push-main` does).
 
 **Side effects:** may create one `chore: bump to X.Y.Z` commit, may rewrite
-this branch's history via rebase, and pushes straight to `origin/main` with
-no confirmation step beyond what's below — the version-bump decision and the
-rebase are the only judgment calls, everything else is unconditional once
-`ship` runs. Treat invoking `ship` itself as the approval gate: don't run it
-until the branch is actually meant to land now.
+this branch's history via rebase, pushes straight to `origin/main` with
+no confirmation step beyond what's below, and — once that push succeeds —
+deletes the shipped branch from `origin` if a remote copy exists (this
+workflow has no PRs, so nothing else points at that ref once its commits are
+on `main`). The version-bump decision and the rebase are the only judgment
+calls, everything else is unconditional once `ship` runs. Treat invoking
+`ship` itself as the approval gate: don't run it until the branch is
+actually meant to land now.
 
 ## Step 1 — Guardrails (read-only)
 
@@ -69,9 +72,10 @@ ${CLAUDE_SKILL_DIR}/scripts/check-and-ship.sh ship [--bump patch|minor]
 ```
 
 This fetches, bumps if asked, rebases onto the base branch if it's moved,
-and pushes to `origin/<base>`. If the rebase hits a conflict, the script
-aborts it and leaves the branch exactly as it was — resolve manually and
-re-run; do not attempt to auto-resolve conflicts yourself either.
+pushes to `origin/<base>`, then deletes the branch from `origin` if it
+exists there. If the rebase hits a conflict, the script aborts it and
+leaves the branch exactly as it was — resolve manually and re-run; do not
+attempt to auto-resolve conflicts yourself either.
 
 ## Step 4 — Hand back
 
@@ -79,4 +83,6 @@ Report the final line the script prints (`Shipped <branch> ->
 origin/<base> (<sha>)`) and the new version if one was bumped. Note that any
 other local checkout of this repo (e.g. someone's own working copy) won't
 see the change until they pull — this skill never touches a checkout other
-than the one it's run from.
+than the one it's run from. The local branch is left in place (only its
+remote copy is deleted) — worktree/branch cleanup on this checkout is
+whatever process created it, not this skill's job.

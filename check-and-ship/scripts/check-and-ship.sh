@@ -179,3 +179,8 @@ git push origin "HEAD:$BASE_BRANCH"
 
 echo
 echo "Shipped $BRANCH -> origin/$BASE_BRANCH ($(git rev-parse --short HEAD))"
+
+if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+  echo "==> git push origin --delete $BRANCH (shipped, no PR ever pointed at it — no more use)"
+  git push origin --delete "$BRANCH"
+fi
