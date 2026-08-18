@@ -68,6 +68,15 @@ is_running() {
   [[ -f "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null
 }
 
+wait_for_listen() {
+  local port="$1" tries=10
+  while (( tries-- > 0 )); do
+    lsof -i ":$port" -sTCP:LISTEN >/dev/null 2>&1 && return 0
+    sleep 0.5
+  done
+  return 1
+}
+
 do_stop() {
   if is_running; then
     local pid
@@ -123,7 +132,6 @@ do_start() {
   disown
 
   echo "$new_pid" > "$PIDFILE"
-  echo "$port_to_use" > "$PORTFILE"
 
   sleep 2
   if ! kill -0 "$new_pid" 2>/dev/null; then
@@ -133,8 +141,25 @@ do_start() {
     exit 1
   fi
 
+  # Don't trust that the server honored $PORT — confirm it, or find where it
+  # actually bound (many dev servers, e.g. Vite, ignore $PORT and print their
+  # own URL in stdout/stderr instead).
+  local actual_port="$port_to_use"
+  if ! wait_for_listen "$port_to_use"; then
+    local detected
+    detected="$(grep -Eo 'https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?' "$LOGFILE" 2>/dev/null | tail -n1 | grep -Eo '[0-9]+$' || true)"
+    if [[ -n "$detected" ]] && lsof -i ":$detected" -sTCP:LISTEN >/dev/null 2>&1; then
+      actual_port="$detected"
+      echo "dev-preview.sh: note — dev server did not honor PORT=$port_to_use; it's actually listening on $actual_port (detected from $LOGFILE)." >&2
+    else
+      echo "dev-preview.sh: warning — could not confirm the dev server is listening on $port_to_use, and no other port could be detected in $LOGFILE. It may still be starting, or it may bind somewhere this script can't see. Check $LOGFILE and 'lsof -i' manually." >&2
+    fi
+  fi
+
+  echo "$actual_port" > "$PORTFILE"
+
   echo
-  echo "Preview: http://localhost:$port_to_use"
+  echo "Preview: http://localhost:$actual_port"
   echo "Logs:    $LOGFILE"
   echo "Stop:    dev-preview.sh stop   (run from $ABS_DIR)"
 }

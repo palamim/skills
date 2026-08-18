@@ -16,11 +16,14 @@ second `start` from the same directory reuses the already-running server
 instead of starting a duplicate.
 
 **Assumes:** run from the root of an npm/pnpm/yarn project (a directory with
-`package.json` containing a `"dev"` script). Only works if that dev server
+`package.json` containing a `"dev"` script). It works best if that dev server
 honors the `PORT` environment variable to pick its port — true for Next.js,
 Create React App, and most Node dev servers. If a project's dev script
-ignores `PORT`, this can't relocate it off a busy port; `start` will still
-launch it, but on whatever port it defaults to.
+ignores `PORT` (e.g. plain Vite, which needs `server.port` in `vite.config`),
+this can't relocate it off a busy port — but `start` detects this: it
+confirms the server is actually listening on the picked port, and if it
+isn't, greps the dev server's own log for the URL it printed and reports
+that instead, with a note explaining the mismatch.
 
 **Side effects:** starts a detached background process (`nohup` + `disown`)
 that keeps running after this session ends, until stopped explicitly. Writes
@@ -48,9 +51,17 @@ one — do not treat that as an error.
 ## Step 2 — Report back
 
 State the URL plainly, exactly as the script prints it (`Preview:
-http://localhost:<port>`). Nothing else needs summarizing. Do not open a
-browser or claim to have visually verified the change — the human is the one
-who's going to look.
+http://localhost:<port>`) — this URL is already verified to be listening, so
+you don't need to independently curl or open it. Nothing else needs
+summarizing. Do not open a browser or claim to have visually verified the
+change — the human is the one who's going to look.
+
+If the script also printed a `note —` line explaining that the dev server
+picked its own port instead of honoring `PORT`, mention that briefly so the
+human isn't surprised the port doesn't match what was requested. If it
+printed a `warning —` line (it couldn't confirm any listening port), say so
+plainly instead of asserting the link works — check the log it points to
+before guessing further.
 
 ## Step 3 — Clean up when it's no longer needed
 
