@@ -1,6 +1,6 @@
 ---
 name: check-and-ship
-description: Ship the current branch straight into main — decide whether a version bump is warranted (patch/minor only, reasoned from the branch's changes, never asks which number), rebase onto main if it's moved since branching, then fast-forward-push directly to origin. Extends bump-push-main to the multi-branch/multi-agent case: several agents each on their own branch or worktree, each shipping into a shared main independently. Use when a branch's work is ready to land on main right now, no PR.
+description: Ship the current branch straight into main — decide whether a version bump is warranted (patch/minor only, reasoned from the branch's changes, never asks which number), rebase onto main if it's moved since branching, then fast-forward-push directly to origin. Built for the multi-branch/multi-agent case: several agents each on their own branch or worktree, each shipping into a shared main independently. Use when a branch's work is ready to land on main right now, no PR.
 disable-model-invocation: true
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/check-and-ship.sh *) Bash(git *) Bash(npm *)
 ---
@@ -17,8 +17,8 @@ no merge commit.
 
 **Assumes:** run from a git repo with an `origin` remote, on a branch other
 than the base branch, with a clean working tree (commit or stash first —
-this only ships committed history, it does not sweep up stragglers the way
-`bump-push-main` does).
+this only ships committed history, it does not sweep up uncommitted
+stragglers).
 
 **Side effects:** may create one `chore: bump to X.Y.Z` commit, may rewrite
 this branch's history via rebase, pushes straight to `origin/main` with
@@ -59,7 +59,7 @@ origin/main..HEAD` and `git diff origin/main...HEAD` (excluding
 `package.json`/lock files) — and use ordinary semver judgment:
 
 - Not every branch needs a bump. Pure docs/config/internal-only changes can
-  skip it — use judgment, same as `bump-push-main`.
+  skip it — use judgment.
 - A user-visible fix → `patch`. A new capability → `minor`.
 - Never `minor` vs `major` in the sense of asking me which number — decide
   the level yourself. You do not need my sign-off on the exact version

@@ -66,7 +66,7 @@ any name that already exists there as a real (non-symlink) directory.
 
 ## Other skills
 
-These two exist mainly to maintain this repo, but are useful patterns for any
+These exist mainly to maintain this repo, but are useful patterns for any
 skill collection of your own.
 
 ### create-skill
@@ -75,15 +75,6 @@ Scaffolds a new skill in this repo — `SKILL.md`, `scripts/` if needed, a
 README entry — then symlinks it into `~/.claude/skills/` via
 `scripts/link-skills.sh`. See
 [`create-skill/SKILL.md`](create-skill/SKILL.md).
-
-### bump-push-main
-
-For any npm project: proposes a version bump for `package.json`
-(patch/minor/major, reasoned from the session's changes), asks you to
-confirm or override it — the only question it asks — then runs `npm install`
-to sync the lockfile, stages everything uncommitted, commits, and pushes
-straight to `main`. See
-[`bump-push-main/SKILL.md`](bump-push-main/SKILL.md).
 
 ### dev-preview
 
