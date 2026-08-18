@@ -8,10 +8,12 @@ allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/check-and-ship.sh *) Bash(git *)
 # Check and ship
 
 **What it does:** the deterministic half of "ship this branch": optionally
-bumps `package.json`'s version (patch or minor only — never major, since no
-project of mine has left the `0.x.x` phase), rebases onto the base branch if
-it's moved since this branch started, and fast-forward-pushes straight to
-`origin/main` (or `origin/master`). No PR, no merge commit.
+bumps the project's version — `package.json` for npm projects, or a plain
+`VERSION` file (bare `X.Y.Z`) for everything else — (patch or minor only —
+never major, since no project of mine has left the `0.x.x` phase), rebases
+onto the base branch if it's moved since this branch started, and
+fast-forward-pushes straight to `origin/main` (or `origin/master`). No PR,
+no merge commit.
 
 **Assumes:** run from a git repo with an `origin` remote, on a branch other
 than the base branch, with a clean working tree (commit or stash first —
@@ -44,8 +46,13 @@ sweep in. If already on the base branch, stop — there's nothing to ship.
 ## Step 2 — Decide on a version bump
 
 Skip this step entirely if `status` reported the repo as opted out of
-version bumps, or if there's no `package.json` — go straight to Step 3 with
-no `--bump` flag.
+version bumps, or if `status` reported "version file: none found" — go
+straight to Step 3 with no `--bump` flag. Otherwise `status` will report
+either `package.json` or `VERSION` as the version file in use — the script
+bumps whichever one it finds (a plain `VERSION` file holding a bare
+`X.Y.Z` string is the fallback for non-npm projects, e.g. Swift packages).
+Don't skip the bump just because a project has no `package.json`; check for
+`VERSION` first.
 
 Otherwise, look at what this branch actually adds — `git log
 origin/main..HEAD` and `git diff origin/main...HEAD` (excluding

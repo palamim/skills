@@ -5,6 +5,10 @@
 # mine has left the 0.x.x phase), rebase onto the base branch if it's moved,
 # then fast-forward-push directly to origin.
 #
+# Version bumps work against package.json (npm projects) or, if that's
+# absent, a plain VERSION file at the repo root containing a bare X.Y.Z
+# string (e.g. Swift packages and other non-npm projects).
+#
 # Usage:
 #   check-and-ship.sh ship [--bump patch|minor] [--base <branch>]
 #   check-and-ship.sh no-version
@@ -122,10 +126,17 @@ if [[ "$COMMAND" == "status" ]]; then
   AHEAD="$(echo "$AHEAD_BEHIND" | cut -f2)"
   OPT="not opted out"
   is_opted_out && OPT="opted out of version bumps"
+  VERSION_FILE="none found"
+  if [[ -f package.json ]]; then
+    VERSION_FILE="package.json"
+  elif [[ -f VERSION ]]; then
+    VERSION_FILE="VERSION"
+  fi
   echo "branch:        $BRANCH ($DIRTY)"
   echo "base:          $BASE_BRANCH"
   echo "ahead/behind:  $AHEAD ahead, $BEHIND behind origin/$BASE_BRANCH"
   echo "versioning:    $OPT"
+  echo "version file:  $VERSION_FILE"
   exit 0
 fi
 
@@ -137,25 +148,51 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 if [[ -n "$BUMP" ]]; then
-  if [[ ! -f package.json ]]; then
-    echo "check-and-ship.sh: --bump was given but there's no package.json in $REPO_ROOT." >&2
-    exit 1
-  fi
   if is_opted_out; then
     echo "check-and-ship.sh: $REPO_ID is marked as not managing versions (run 'no-version' to undo) — omit --bump." >&2
     exit 1
   fi
-  command -v npm >/dev/null 2>&1 || { echo "check-and-ship.sh: npm not found on PATH." >&2; exit 1; }
 
-  echo "==> npm version $BUMP"
-  NEW_VERSION="$(npm version "$BUMP" --no-git-tag-version)"
+  if [[ -f package.json ]]; then
+    command -v npm >/dev/null 2>&1 || { echo "check-and-ship.sh: npm not found on PATH." >&2; exit 1; }
 
-  echo "==> npm install (sync lockfile)"
-  npm install >/dev/null
+    echo "==> npm version $BUMP"
+    NEW_VERSION="$(npm version "$BUMP" --no-git-tag-version)"
+    NEW_VERSION="${NEW_VERSION#v}"
 
-  echo "==> git commit (version bump)"
-  git add -A
-  git commit -m "chore: bump to ${NEW_VERSION#v}" >/dev/null
+    echo "==> npm install (sync lockfile)"
+    npm install >/dev/null
+
+    echo "==> git commit (version bump)"
+    git add -A
+    git commit -m "chore: bump to ${NEW_VERSION}" >/dev/null
+  elif [[ -f VERSION ]]; then
+    CURRENT_VERSION="$(tr -d '[:space:]' < VERSION)"
+    if [[ ! "$CURRENT_VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+      echo "check-and-ship.sh: VERSION file doesn't contain a plain X.Y.Z version (got '$CURRENT_VERSION')." >&2
+      exit 1
+    fi
+    MAJOR="${BASH_REMATCH[1]}"
+    MINOR="${BASH_REMATCH[2]}"
+    PATCH="${BASH_REMATCH[3]}"
+    if [[ "$BUMP" == "minor" ]]; then
+      MINOR=$((MINOR + 1))
+      PATCH=0
+    else
+      PATCH=$((PATCH + 1))
+    fi
+    NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+    echo "==> bumping VERSION: $CURRENT_VERSION -> $NEW_VERSION"
+    echo "$NEW_VERSION" > VERSION
+
+    echo "==> git commit (version bump)"
+    git add VERSION
+    git commit -m "chore: bump to ${NEW_VERSION}" >/dev/null
+  else
+    echo "check-and-ship.sh: --bump was given but there's no package.json or VERSION file in $REPO_ROOT." >&2
+    exit 1
+  fi
 fi
 
 MERGE_BASE="$(git merge-base "origin/$BASE_BRANCH" HEAD)"
