@@ -1,7 +1,6 @@
 ---
 name: check-and-ship
-description: Ship the current branch straight into main — decide whether a version bump is warranted (patch/minor only, reasoned from the branch's changes, never asks which number), rebase onto main if it's moved since branching, then fast-forward-push directly to origin. Built for the multi-branch/multi-agent case: several agents each on their own branch or worktree, each shipping into a shared main independently. Use when a branch's work is ready to land on main right now, no PR.
-disable-model-invocation: true
+description: Ship the current branch straight into main — decide whether a version bump is warranted (patch/minor only, reasoned from the branch's changes, never asks which number), rebase onto main if it's moved since branching, then fast-forward-push directly to origin. Built for the multi-branch/multi-agent case: several agents each on their own branch or worktree, each shipping into a shared main independently. Use when a branch's work is ready to land on main right now, no PR — Claude can trigger this itself once the branch's work is done and the tree is clean, without waiting to be told.
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/check-and-ship.sh *) Bash(git *) Bash(npm *)
 ---
 
